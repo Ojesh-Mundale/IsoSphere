@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IsoSphere | Reports</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green: #00ff88;
+      --neon-cyan: #00eeff;
+      --neon-gold: #ffcc00;
+      --neon-red: #ff4466;
+      --plasma: #7fff00;
+      --deep: #020a06;
+      --card-bg: rgba(0,20,10,0.75);
+      --card-border: rgba(0,255,136,0.18);
+      --glow-sm: 0 0 8px rgba(0,255,136,0.4);
+      --glow-lg: 0 0 30px rgba(0,238,255,0.4), 0 0 60px rgba(0,238,255,0.15);
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--deep);
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Backgrounds ── */
+    .bg-field {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0,255,136,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 90% 10%, rgba(0,238,255,0.06) 0%, transparent 55%),
+        linear-gradient(135deg, #020a06 0%, #030f0a 40%, #010808 100%);
+    }
+    .hex-grid {
+      position: fixed; inset: 0; z-index: 0; opacity: 0.06; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='69'%3E%3Cpolygon points='30,1 58,16 58,53 30,68 2,53 2,16' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3C/svg%3E");
+      background-size: 60px 69px;
+      animation: hexdrift 40s linear infinite;
+    }
+    @keyframes hexdrift { from{background-position:0 0} to{background-position:120px 138px} }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    }
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%; opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: 0.5; }
+      90%  { opacity: 0.15; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+    }
+
+    /* ── Navbar ── */
+    .navbar-nuclear {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(2,10,6,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,255,136,0.12);
+      padding: 0.7rem 0;
+    }
+    .navbar-nuclear::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+      animation: nav-pulse 3s ease-in-out infinite;
+    }
+    @keyframes nav-pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+
+    .brand-logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800; font-size: 1.25rem;
+      color: var(--neon-green);
+      text-shadow: var(--glow-sm);
+      letter-spacing: 2px;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-logo:hover { color: var(--neon-cyan); }
+    .atom-icon { width: 28px; height: 28px; animation: spin-slow 8s linear infinite; }
+    @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .nav-links { display: flex; gap: 0.2rem; align-items: center; }
+    .nav-link-item {
+      color: rgba(200,255,224,0.6);
+      text-decoration: none; font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.8rem;
+      border-radius: 4px; border: 1px solid transparent;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      text-transform: uppercase; font-size: 0.72rem;
+    }
+    .nav-link-item:hover, .nav-link-item.active {
+      color: var(--neon-green);
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.07);
+      text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    .nav-link-item.active { color: var(--neon-green); }
+    .btn-nav-outline {
+      border: 1px solid rgba(0,238,255,0.35);
+      color: rgba(0,238,255,0.8);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-outline:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 14px rgba(0,238,255,0.2); }
+    .btn-nav-primary {
+      border: 1px solid var(--neon-green);
+      background: rgba(0,255,136,0.1);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-primary:hover { background: rgba(0,255,136,0.2); color: #fff; box-shadow: 0 0 16px rgba(0,255,136,0.3); }
+
+    /* ── Main ── */
+    main { position: relative; z-index: 2; padding-top: 80px; padding-bottom: 3rem; }
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 2rem 0 1.5rem;
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      margin-bottom: 2rem;
+      display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem;
+    }
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem; font-weight: 600;
+      color: #e0fff0;
+      text-shadow: 0 0 20px rgba(0,255,136,0.15);
+    }
+    .page-subtitle { color: rgba(180,255,220,0.5); font-size: 0.9rem; margin-top: 0.35rem; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.25);
+      padding: 0.4rem 0.9rem; border-radius: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem; color: rgba(0,255,136,0.7);
+      letter-spacing: 0.1em;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Ticker ── */
+    .ticker {
+      background: rgba(0,255,136,0.05);
+      border-top: 1px solid rgba(0,255,136,0.1);
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      padding: 0.35rem 0; overflow: hidden; margin-bottom: 2rem;
+    }
+    .ticker-inner {
+      display: flex; gap: 4rem; white-space: nowrap;
+      animation: ticker-scroll 28s linear infinite;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; color: rgba(0,255,136,0.38); letter-spacing: 0.1em;
+    }
+    @keyframes ticker-scroll { from{transform:translateX(100%)} to{transform:translateX(-200%)} }
+
+    /* ── Glass Card ── */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px; overflow: hidden;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+      opacity: 0.5;
+    }
+    .card-inner { padding: 1.5rem; }
+
+    .card-head {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--neon-green); margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-head svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .card-head.cyan-head { color: var(--neon-cyan); }
+    .card-head.gold-head { color: var(--neon-gold); }
+
+    /* ── Form controls ── */
+    .form-label-nuc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem; display: block;
+    }
+    .form-select-nuc {
+      width: 100%;
+      background: rgba(0,15,8,0.8);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 4px;
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      padding: 0.55rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300ff88' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      padding-right: 2rem;
+    }
+    .form-select-nuc:focus {
+      border-color: rgba(0,255,136,0.5);
+      box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+    }
+    .form-select-nuc option { background: #061a10; color: #c8ffe0; }
+
+    /* ── Run button ── */
+    .btn-nuclear {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05));
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+      padding: 0.85rem; border-radius: 4px;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 0 15px rgba(0,255,136,0.15), inset 0 0 15px rgba(0,255,136,0.04);
+      text-transform: uppercase; margin-top: 1.25rem;
+      position: relative; overflow: hidden;
+    }
+    .btn-nuclear::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,136,0.1), transparent);
+      transition: left 0.4s;
+    }
+    .btn-nuclear:hover::before { left: 100%; }
+    .btn-nuclear:hover {
+      background: rgba(0,255,136,0.2);
+      color: #fff; box-shadow: 0 0 28px rgba(0,255,136,0.35), inset 0 0 20px rgba(0,255,136,0.08);
+    }
+    .btn-nuclear:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Progress bar ── */
+    .progress-nuc {
+      height: 3px; background: rgba(0,255,136,0.1);
+      border-radius: 2px; overflow: hidden; margin-top: 1rem; display: none;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      border-radius: 2px; transition: width 0.1s linear;
+      box-shadow: 0 0 8px rgba(0,255,136,0.5);
+    }
+
+    /* ── Skeleton loading ── */
+    .skeleton-wrap { display: none; margin-top: 1rem; }
+    .skeleton-line {
+      height: 10px; border-radius: 4px;
+      background: linear-gradient(90deg, rgba(0,255,136,0.07) 25%, rgba(0,255,136,0.14) 50%, rgba(0,255,136,0.07) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+
+    /* ── Report type cards ── */
+    .report-type-grid { display: flex; flex-direction: column; gap: 8px; }
+    .report-type-btn {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: rgba(0,10,5,0.7);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px; padding: 0.75rem 1rem;
+      cursor: pointer; transition: all 0.2s; text-align: left;
+      width: 100%; color: #c8ffe0;
+    }
+    .report-type-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .report-type-btn .rt-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .report-type-btn .rt-desc {
+      font-size: 0.76rem;
+      color: rgba(180,255,220,0.4);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .report-type-btn:hover, .report-type-btn.active {
+      border-color: var(--neon-green);
+      background: rgba(0,255,136,0.08);
+      box-shadow: 0 0 12px rgba(0,255,136,0.12);
+    }
+    .report-type-btn.active .rt-label { color: var(--neon-green); }
+    .report-type-btn.cyan-rt:hover, .report-type-btn.cyan-rt.active {
+      border-color: var(--neon-cyan);
+      background: rgba(0,238,255,0.08);
+      box-shadow: 0 0 12px rgba(0,238,255,0.12);
+    }
+    .report-type-btn.cyan-rt.active .rt-label { color: var(--neon-cyan); }
+    .report-type-btn.gold-rt:hover, .report-type-btn.gold-rt.active {
+      border-color: var(--neon-gold);
+      background: rgba(255,204,0,0.08);
+      box-shadow: 0 0 12px rgba(255,204,0,0.12);
+    }
+    .report-type-btn.gold-rt.active .rt-label { color: var(--neon-gold); }
+
+    /* ── Report preview ── */
+    .report-preview {
+      background: rgba(0,10,5,0.6);
+      border: 1px solid rgba(0,255,136,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview-header {
+      background: rgba(0,255,136,0.06);
+      border-bottom: 1px solid rgba(0,255,136,0.12);
+      padding: 0.85rem 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .preview-header-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--neon-green); opacity: 0.6;
+    }
+    .preview-header-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+    }
+    .preview-body {
+      padding: 1.5rem 1.75rem;
+      min-height: 380px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .preview-empty-icon {
+      width: 48px; height: 48px;
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      background: rgba(0,255,136,0.04);
+    }
+    .preview-empty-icon svg { width: 24px; height: 24px; }
+    .preview-empty-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(180,255,220,0.3);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ── Download section ── */
+    .download-section {
+      background: rgba(0,255,136,0.04);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .download-section.visible { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05));
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em;
+      padding: 0.65rem 1.5rem; border-radius: 4px;
+      text-decoration: none; transition: all 0.25s;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .download-btn:hover {
+      background: rgba(0,255,136,0.2);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0,255,136,0.3);
+    }
+    .download-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.08em;
+      color: rgba(180,255,220,0.3);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Report contents list ── */
+    .contents-list { list-style: none; padding: 0; margin: 0; }
+    .contents-list li {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(0,255,136,0.06);
+      font-size: 0.82rem;
+      color: rgba(180,255,220,0.5);
+      transition: color 0.2s;
+    }
+    .contents-list li:last-child { border-bottom: none; }
+    .contents-list li:hover { color: rgba(200,255,224,0.85); }
+    .contents-list li .cl-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem; font-weight: 600;
+      color: rgba(0,255,136,0.4);
+      width: 20px; flex-shrink: 0;
+    }
+    .contents-list li .cl-check {
+      margin-left: auto;
+      width: 14px; height: 14px;
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contents-list li .cl-check svg { width: 10px; height: 10px; }
+    .contents-list li.included .cl-check {
+      background: rgba(0,255,136,0.15);
+      border-color: rgba(0,255,136,0.4);
+    }
+    .contents-list li.included .cl-check svg { stroke: var(--neon-green); }
+
+    /* ── History items ── */
+    .history-item {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(0,255,136,0.06);
+      transition: background 0.2s;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-icon {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .history-icon svg { width: 16px; height: 16px; }
+    .history-name {
+      font-size: 0.84rem;
+      color: rgba(200,255,224,0.75);
+      font-weight: 500;
+    }
+    .history-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      color: rgba(180,255,220,0.3);
+      margin-top: 1px;
+    }
+    .history-action {
+      margin-left: auto;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem;
+      color: rgba(0,255,136,0.5);
+      border: 1px solid rgba(0,255,136,0.2);
+      padding: 3px 10px;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .history-action:hover {
+      border-color: rgba(0,255,136,0.4);
+      color: var(--neon-green);
+      background: rgba(0,255,136,0.06);
+    }
+
+    /* ── Terminal ── */
+    .terminal-box {
+      background: rgba(0,10,5,0.8);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px; padding: 1.1rem 1.25rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem; color: rgba(0,255,136,0.6);
+      position: relative; overflow: hidden;
+    }
+    .terminal-box::before {
+      content: '● ● ●';
+      display: block; color: rgba(0,255,136,0.3);
+      font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 0.6rem;
+    }
+    .terminal-line { margin: 2px 0; }
+    .terminal-prompt { color: rgba(0,238,255,0.6); }
+    .terminal-output { color: rgba(0,255,136,0.45); }
+    .cursor-blink { animation: blink 1s step-end infinite; color: var(--neon-green); }
+
+    /* ── Footer ── */
+    .footer-nuclear {
+      text-align: center;
+      padding: 2rem 1rem;
+      border-top: 1px solid rgba(0,255,136,0.1);
+      margin-top: 2rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: rgba(0,255,136,0.3);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal:nth-child(2) { transition-delay: 0.1s; }
+    .reveal:nth-child(3) { transition-delay: 0.2s; }
+  </style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div class="hex-grid"></div>
+<div class="scanlines"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Navbar -->
+<nav class="navbar-nuclear">
+  <div class="page-wrap d-flex align-items-center justify-content-between">
+    <a class="brand-logo" href="/">
+      <svg class="atom-icon" viewBox="0 0 40 40" fill="none">
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00ff88" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00eeff" stroke-width="1.5" opacity="0.7" transform="rotate(60 20 20)"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#7fff00" stroke-width="1.5" opacity="0.7" transform="rotate(120 20 20)"/>
+        <circle cx="20" cy="20" r="3" fill="#00ff88"/>
+      </svg>
+      ISOSPHERE
+    </a>
+    <nav class="nav-links d-none d-lg-flex">
+      <a class="nav-link-item" href="/dashboard">Dashboard</a>
+      <a class="nav-link-item" href="/simulation">Simulation</a>
+      <a class="nav-link-item" href="/compare">Compare</a>
+      <a class="nav-link-item" href="/ai">AI Advisor</a>
+      <a class="nav-link-item active" href="/reports">Reports</a>
+      <a class="nav-link-item" href="/about">About</a>
+    </nav>
+    <div class="d-flex gap-2">
+      <a class="btn-nav-outline" href="/simulation">Simulation</a>
+      <a class="btn-nav-primary" href="/ai">AI Advisor</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- Ticker -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>◈ REPORT ENGINE: STANDBY</span>
+      <span>◈ FORMATS: PDF · AVAILABLE</span>
+      <span>◈ TEMPLATES: 3 LOADED</span>
+      <span>◈ REPORTLAB: CONNECTED</span>
+      <span>◈ CHART EXPORT: READY</span>
+      <span>◈ DATA INTEGRITY: VERIFIED</span>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">// Nuclear Intelligence Platform</div>
+        <div class="page-title">Report <span style="color:var(--neon-cyan);text-shadow:0 0 20px rgba(0,238,255,0.4);">Generator</span></div>
+        <div class="page-subtitle">Generate professional PDF reports containing simulation summary, economic analysis, charts, AI insights, and recommendations.</div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        ReportLab Ready
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="row g-3">
+
+      <!-- LEFT: Controls -->
+      <div class="col-12 col-lg-4">
+        <div class="glass-card">
+          <div class="card-inner">
+            <div class="card-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2M6.34 6.34l1.42 1.42M16.24 16.24l1.42 1.42M6.34 17.66l1.42-1.42M16.24 7.76l1.42-1.42"/></svg>
+              Select Report Type
+            </div>
+
+            <div class="report-type-grid" id="reportTypeGrid">
+              <button class="report-type-btn active" data-type="simulation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <div>
+                  <div class="rt-label">Simulation Summary</div>
+                  <div class="rt-desc">Full simulation results, KPIs, charts, and AI explanation.</div>
+                </div>
+              </button>
+              <button class="report-type-btn cyan-rt" data-type="comparison">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+                <div>
+                  <div class="rt-label">Comparison Brief</div>
+                  <div class="rt-desc">Nuclear vs traditional side-by-side with delta analysis.</div>
+                </div>
+              </button>
+              <button class="report-type-btn gold-rt" data-type="executive">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <div>
+                  <div class="rt-label">Executive Dashboard</div>
+                  <div class="rt-desc">High-level overview with investment, ROI, and impact score.</div>
+                </div>
+              </button>
+            </div>
+
+            <button class="btn-nuclear" id="genReport">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Generate PDF
+            </button>
+
+            <div class="progress-nuc" id="progressBar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="skeleton-wrap" id="reportLoading">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line" style="width:75%"></div>
+              <div class="skeleton-line" style="width:90%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Contents -->
+        <div class="glass-card mt-3">
+          <div class="card-inner" style="padding:1.1rem 1.25rem;">
+            <div class="card-head" style="margin-bottom:0.75rem;font-size:0.72rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+              Report Contents
+            </div>
+            <ul class="contents-list" id="contentsList">
+              <li class="included">
+                <span class="cl-num">01</span>
+                <span>Executive Summary</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li class="included">
+                <span class="cl-num">02</span>
+                <span>Methodology & Data Sources</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li class="included">
+                <span class="cl-num">03</span>
+                <span>Economic Analysis</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li class="included">
+                <span class="cl-num">04</span>
+                <span>Performance Charts</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li class="included">
+                <span class="cl-num">05</span>
+                <span>AI-Generated Insights</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li class="included">
+                <span class="cl-num">06</span>
+                <span>Risk Assessment</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+              <li>
+                <span class="cl-num">07</span>
+                <span>Appendix & Raw Data</span>
+                <span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Preview + Download + History -->
+      <div class="col-12 col-lg-8">
+        <!-- Preview -->
+        <div class="glass-card reveal">
+          <div class="card-inner">
+            <div class="card-head cyan-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Report Preview
+            </div>
+
+            <div class="report-preview" id="reportPreview">
+              <div class="preview-header">
+                <div class="preview-header-dot"></div>
+                <div class="preview-header-text" id="previewTitle">Simulation Summary — Preview</div>
+              </div>
+              <div class="preview-body" id="previewBody">
+                <div class="preview-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,255,136,0.3)" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="preview-empty-text">
+                  Click <span style="color:var(--neon-green);">Generate PDF</span> to compile<br>your report and preview it here.
+                </div>
+              </div>
+            </div>
+
+            <!-- Download section (hidden until generated) -->
+            <div class="download-section" id="downloadSection">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+                <div>
+                  <div style="font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:600;color:var(--neon-green);letter-spacing:0.06em;margin-bottom:2px;">Report Ready</div>
+                  <div class="download-meta" id="downloadMeta">simulation_summary_2024.pdf · 2.4 MB</div>
+                </div>
+                <a class="download-btn" id="downloadLink" href="#">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Previous Reports -->
+        <div class="glass-card mt-3 reveal">
+          <div class="card-inner">
+            <div class="card-head gold-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Previous Reports
+            </div>
+
+            <div class="history-item">
+              <div class="history-icon" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <div class="history-name">Healthcare Simulation Summary</div>
+                <div class="history-meta">Simulation · Dec 14, 2024 · 2.1 MB</div>
+              </div>
+              <a class="history-action" href="#">Download</a>
+            </div>
+            <div class="history-item">
+              <div class="history-icon" style="background:rgba(0,238,255,0.08);border:1px solid rgba(0,238,255,0.15);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+              </div>
+              <div>
+                <div class="history-name">Agriculture Comparison Brief</div>
+                <div class="history-meta">Comparison · Dec 12, 2024 · 1.8 MB</div>
+              </div>
+              <a class="history-action" href="#">Download</a>
+            </div>
+            <div class="history-item">
+              <div class="history-icon" style="background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.15);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div>
+                <div class="history-name">Executive Dashboard — Q4 2024</div>
+                <div class="history-meta">Executive · Dec 10, 2024 · 3.2 MB</div>
+              </div>
+              <a class="history-action" href="#">Download</a>
+            </div>
+            <div class="history-item">
+              <div class="history-icon" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <div class="history-name">Food Safety Simulation Summary</div>
+                <div class="history-meta">Simulation · Dec 8, 2024 · 1.9 MB</div>
+              </div>
+              <a class="history-action" href="#">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-box reveal">
+      <div class="terminal-line"><span class="terminal-prompt">isosphere@reports:~$</span> <span style="color:#c8ffe0">reportlab --check</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ ReportLab 4.x: detected</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ PDF template engine: 3 templates loaded</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Chart export (canvas→PNG→PDF): available</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Flask endpoint /api/reports/generate: listening</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Output directory: /static/reports/</span></div>
+      <div class="terminal-line" style="margin-top:6px"><span class="terminal-prompt">isosphere@reports:~$</span> <span class="cursor-blink">█</span></div>
+    </div>
+
+    <footer class="footer-nuclear">
+      © ISOSPHERE · REPORT ENGINE v1.7.0 · POWERED BY REPORTLAB · NUCLEAR INTELLIGENCE PLATFORM
+    </footer>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/reports.js"></script>
+<script>
+  // ── Particles ──
+  var pContainer = document.getElementById('particles');
+  for (var i = 0; i < 25; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var size = Math.random() * 2.5 + 1;
+    p.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (Math.random()*100) + '%;' +
+      'bottom:' + (Math.random()*20) + '%;' +
+      'animation-duration:' + (9+Math.random()*18) + 's;' +
+      'animation-delay:' + (Math.random()*12) + 's;' +
+      'background:' + (Math.random()>0.5?'#00ff88':'#00eeff') + ';';
+    pContainer.appendChild(p);
+  }
+
+  // ── Scroll Reveal ──
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  // ── Report type selection ──
+  var activeReportType = 'simulation';
+  var typeButtons = document.querySelectorAll('.report-type-btn');
+  var previewTitle = document.getElementById('previewTitle');
+
+  var typeLabels = {
+    simulation: 'Simulation Summary — Preview',
+    comparison: 'Comparison Brief — Preview',
+    executive: 'Executive Dashboard — Preview'
+  };
+
+  var typeFilenames = {
+    simulation: 'simulation_summary_2024.pdf',
+    comparison: 'comparison_brief_2024.pdf',
+    executive: 'executive_dashboard_q4_2024.pdf'
+  };
+
+  var typeSizes = {
+    simulation: '2.4 MB',
+    comparison: '1.8 MB',
+    executive: '3.2 MB'
+  };
+
+  typeButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      typeButtons.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      activeReportType = btn.dataset.type;
+      previewTitle.textContent = typeLabels[activeReportType];
+
+      // Update appendix inclusion based on type
+      var items = document.querySelectorAll('.contents-list li');
+      if (activeReportType === 'executive') {
+        items[1].classList.remove('included'); // methodology
+        items[5].classList.remove('included'); // risk
+        items[6].classList.remove('included'); // appendix
+      } else if (activeReportType === 'comparison') {
+        items[1].classList.add('included');
+        items[5].classList.add('included');
+        items[6].classList.remove('included');
+      } else {
+        items[1].classList.add('included');
+        items[5].classList.add('included');
+        items[6].classList.add('included');
+      }
+
+      // Hide download if type changed
+      document.getElementById('downloadSection').classList.remove('visible');
+    });
+  });
+
+  // ── Generate button with progress ──
+  var genBtn = document.getElementById('genReport');
+  if (genBtn) {
+    genBtn.addEventListener('click', function() {
+      var btn = this;
+      var progress = document.getElementById('progressBar');
+      var fill = document.getElementById('progressFill');
+      var loading = document.getElementById('reportLoading');
+      var downloadSection = document.getElementById('downloadSection');
+      var downloadMeta = document.getElementById('downloadMeta');
+      var previewBody = document.getElementById('previewBody');
+
+      if (btn.disabled) return;
+      btn.disabled = true;
+      progress.style.display = 'block';
+      loading.style.display = 'block';
+      fill.style.width = '0%';
+      downloadSection.classList.remove('visible');
+
+      // Show generating state in preview
+      previewBody.innerHTML =
+        '<div style="text-align:center;">' +
+          '<div style="width:32px;height:32px;border:2px solid rgba(0,255,136,0.2);border-top-color:var(--neon-green);border-radius:50%;animation:spin-fast 0.6s linear infinite;margin:0 auto 1rem;"></div>' +
+          '<div style="font-family:Share Tech Mono,monospace;font-size:0.78rem;color:rgba(0,255,136,0.5);">Compiling report sections...</div>' +
+        '</div>' +
+        '<style>@keyframes spin-fast{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>';
+
+      var pct = 0;
+      var timer = setInterval(function() {
+        pct += Math.random() * 10;
+        if (pct > 90) { clearInterval(timer); }
+        fill.style.width = Math.min(pct, 90) + '%';
+      }, 150);
+
+      setTimeout(function() {
+        clearInterval(timer);
+        fill.style.width = '100%';
+
+        setTimeout(function() {
+          progress.style.display = 'none';
+          loading.style.display = 'none';
+          btn.disabled = false;
+          fill.style.width = '0%';
+
+          // Show success preview
+          previewBody.innerHTML =
+            '<div style="text-align:center;width:100%;max-width:320px;">' +
+              '<div style="width:48px;height:48px;border-radius:50%;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">' +
+                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
+              '</div>' +
+              '<div style="font-family:Orbitron,monospace;font-size:0.85rem;font-weight:600;color:#e0fff0;margin-bottom:0.3rem;">Report Generated</div>' +
+              '<div style="font-family:Share Tech Mono,monospace;font-size:0.72rem;color:rgba(180,255,220,0.4);line-height:1.6;">' + typeLabels[activeReportType].replace(' — Preview','') + '<br>All sections compiled successfully.</div>' +
+            '</div>';
+
+          // Show download
+          downloadMeta.textContent = typeFilenames[activeReportType] + ' · ' + typeSizes[activeReportType];
+          downloadSection.classList.add('visible');
+
+        }, 400);
+      }, 2200);
+    });
+  }
+</script>
+</body>
+</html>

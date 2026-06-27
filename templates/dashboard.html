@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IsoSphere | Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green: #00ff88;
+      --neon-cyan: #00eeff;
+      --neon-gold: #ffcc00;
+      --neon-red: #ff4466;
+      --plasma: #7fff00;
+      --deep: #020a06;
+      --card-bg: rgba(0,20,10,0.75);
+      --card-border: rgba(0,255,136,0.18);
+      --glow-sm: 0 0 8px rgba(0,255,136,0.4);
+      --glow-lg: 0 0 30px rgba(0,238,255,0.4), 0 0 60px rgba(0,238,255,0.15);
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--deep);
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Backgrounds ── */
+    .bg-field {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0,255,136,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 90% 10%, rgba(0,238,255,0.06) 0%, transparent 55%),
+        linear-gradient(135deg, #020a06 0%, #030f0a 40%, #010808 100%);
+    }
+    .hex-grid {
+      position: fixed; inset: 0; z-index: 0; opacity: 0.06; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='69'%3E%3Cpolygon points='30,1 58,16 58,53 30,68 2,53 2,16' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3C/svg%3E");
+      background-size: 60px 69px;
+      animation: hexdrift 40s linear infinite;
+    }
+    @keyframes hexdrift { from{background-position:0 0} to{background-position:120px 138px} }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    }
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%; opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: 0.5; }
+      90%  { opacity: 0.15; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+    }
+
+    /* ── Navbar ── */
+    .navbar-nuclear {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(2,10,6,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,255,136,0.12);
+      padding: 0.7rem 0;
+    }
+    .navbar-nuclear::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+      animation: nav-pulse 3s ease-in-out infinite;
+    }
+    @keyframes nav-pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+
+    .brand-logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800; font-size: 1.25rem;
+      color: var(--neon-green);
+      text-shadow: var(--glow-sm);
+      letter-spacing: 2px;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-logo:hover { color: var(--neon-cyan); }
+    .atom-icon { width: 28px; height: 28px; animation: spin-slow 8s linear infinite; }
+    @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .nav-links { display: flex; gap: 0.2rem; align-items: center; }
+    .nav-link-item {
+      color: rgba(200,255,224,0.6);
+      text-decoration: none; font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.8rem;
+      border-radius: 4px; border: 1px solid transparent;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      text-transform: uppercase; font-size: 0.72rem;
+    }
+    .nav-link-item:hover, .nav-link-item.active {
+      color: var(--neon-green);
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.07);
+      text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    .nav-link-item.active { color: var(--neon-green); }
+    .btn-nav-outline {
+      border: 1px solid rgba(0,238,255,0.35);
+      color: rgba(0,238,255,0.8);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-outline:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 14px rgba(0,238,255,0.2); }
+    .btn-nav-primary {
+      border: 1px solid var(--neon-green);
+      background: rgba(0,255,136,0.1);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-primary:hover { background: rgba(0,255,136,0.2); color: #fff; box-shadow: 0 0 16px rgba(0,255,136,0.3); }
+
+    /* ── Main ── */
+    main { position: relative; z-index: 2; padding-top: 80px; padding-bottom: 3rem; }
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 2rem 0 1.5rem;
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      margin-bottom: 2rem;
+      display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem;
+    }
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem; font-weight: 600;
+      color: #e0fff0;
+      text-shadow: 0 0 20px rgba(0,255,136,0.15);
+    }
+    .page-subtitle { color: rgba(180,255,220,0.5); font-size: 0.9rem; margin-top: 0.35rem; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.25);
+      padding: 0.4rem 0.9rem; border-radius: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem; color: rgba(0,255,136,0.7);
+      letter-spacing: 0.1em;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Ticker ── */
+    .ticker {
+      background: rgba(0,255,136,0.05);
+      border-top: 1px solid rgba(0,255,136,0.1);
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      padding: 0.35rem 0; overflow: hidden; margin-bottom: 2rem;
+    }
+    .ticker-inner {
+      display: flex; gap: 4rem; white-space: nowrap;
+      animation: ticker-scroll 28s linear infinite;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; color: rgba(0,255,136,0.38); letter-spacing: 0.1em;
+    }
+    @keyframes ticker-scroll { from{transform:translateX(100%)} to{transform:translateX(-200%)} }
+
+    /* ── Glass Card ── */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px; overflow: hidden;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+      opacity: 0.5;
+    }
+    .card-inner { padding: 1.5rem; }
+
+    .card-head {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--neon-green); margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-head svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .card-head.cyan-head { color: var(--neon-cyan); }
+    .card-head.gold-head { color: var(--neon-gold); }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+    .kpi-card {
+      background: rgba(0,10,5,0.6);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 1.1rem 1.25rem;
+      text-align: center; transition: border-color 0.3s, box-shadow 0.3s;
+      position: relative;
+    }
+    .kpi-card.active {
+      border-color: rgba(0,255,136,0.35);
+      box-shadow: 0 0 15px rgba(0,255,136,0.08);
+    }
+    .kpi-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(180,255,220,0.4);
+      margin-bottom: 0.5rem;
+    }
+    .kpi-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--neon-green);
+      text-shadow: 0 0 12px rgba(0,255,136,0.4);
+      line-height: 1;
+    }
+    .kpi-value.cyan { color: var(--neon-cyan); text-shadow: 0 0 12px rgba(0,238,255,0.4); }
+    .kpi-value.gold { color: var(--neon-gold); text-shadow: 0 0 12px rgba(255,204,0,0.4); }
+    .kpi-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.08em;
+      color: rgba(180,255,220,0.3);
+      margin-top: 0.4rem;
+    }
+    .kpi-trend {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      margin-top: 0.35rem;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .kpi-trend.up { color: var(--neon-green); background: rgba(0,255,136,0.08); }
+    .kpi-trend.down { color: var(--neon-red); background: rgba(255,68,102,0.08); }
+
+    /* ── Chart surfaces ── */
+    .chart-surface {
+      background: rgba(0,10,5,0.7);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 1rem;
+      position: relative;
+    }
+    .chart-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(0,255,136,0.4);
+      margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .chart-label::before {
+      content: '';
+      width: 8px; height: 2px;
+      background: var(--neon-green);
+      opacity: 0.6;
+    }
+    .chart-surface canvas { display: block; }
+
+    /* ── Progress bars ── */
+    .progress-nuc {
+      height: 6px; background: rgba(0,255,136,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-nuc-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(0,255,136,0.4);
+      transition: width 1s ease;
+    }
+
+    /* ── Recommendation box ── */
+    .recommendation-box {
+      background: rgba(0,238,255,0.05);
+      border: 1px solid rgba(0,238,255,0.15);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      font-size: 0.84rem;
+      line-height: 1.6;
+      color: rgba(0,238,255,0.6);
+      position: relative;
+    }
+    .recommendation-box::before {
+      content: '▸';
+      color: var(--neon-cyan);
+      margin-right: 6px;
+    }
+
+    /* ── Activity list ── */
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(0,255,136,0.06);
+      transition: background 0.2s;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: rgba(0,255,136,0.02); }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .activity-dot.green { background: var(--neon-green); box-shadow: 0 0 6px rgba(0,255,136,0.4); }
+    .activity-dot.cyan { background: var(--neon-cyan); box-shadow: 0 0 6px rgba(0,238,255,0.4); }
+    .activity-dot.gold { background: var(--neon-gold); box-shadow: 0 0 6px rgba(255,204,0,0.4); }
+    .activity-text {
+      font-size: 0.82rem;
+      color: rgba(180,255,220,0.6);
+      line-height: 1.4;
+    }
+    .activity-text strong { color: rgba(200,255,224,0.85); font-weight: 500; }
+    .activity-time {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      color: rgba(180,255,220,0.25);
+      margin-top: 2px;
+    }
+
+    /* ── Quick action buttons ── */
+    .quick-action {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,10,5,0.7);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 4px;
+      padding: 0.55rem 0.85rem;
+      color: rgba(180,255,220,0.6);
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .quick-action svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .quick-action:hover {
+      border-color: rgba(0,255,136,0.35);
+      background: rgba(0,255,136,0.06);
+      color: rgba(200,255,224,0.9);
+      box-shadow: 0 0 12px rgba(0,255,136,0.08);
+    }
+
+    /* ── Sector mini-cards ── */
+    .sector-mini {
+      display: flex; align-items: center; gap: 0.65rem;
+      background: rgba(0,10,5,0.5);
+      border: 1px solid rgba(0,255,136,0.1);
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .sector-mini:hover {
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.04);
+    }
+    .sector-mini-icon {
+      width: 32px; height: 32px;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sector-mini-icon svg { width: 16px; height: 16px; }
+    .sector-mini-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      color: rgba(200,255,224,0.7);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .sector-mini-stat {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* ── Terminal ── */
+    .terminal-box {
+      background: rgba(0,10,5,0.8);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px; padding: 1.1rem 1.25rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem; color: rgba(0,255,136,0.6);
+      position: relative; overflow: hidden;
+    }
+    .terminal-box::before {
+      content: '● ● ●';
+      display: block; color: rgba(0,255,136,0.3);
+      font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 0.6rem;
+    }
+    .terminal-line { margin: 2px 0; }
+    .terminal-prompt { color: rgba(0,238,255,0.6); }
+    .terminal-output { color: rgba(0,255,136,0.45); }
+    .cursor-blink { animation: blink 1s step-end infinite; color: var(--neon-green); }
+
+    /* ── Footer ── */
+    .footer-nuclear {
+      text-align: center;
+      padding: 2rem 1rem;
+      border-top: 1px solid rgba(0,255,136,0.1);
+      margin-top: 2rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: rgba(0,255,136,0.3);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal:nth-child(2) { transition-delay: 0.1s; }
+    .reveal:nth-child(3) { transition-delay: 0.2s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 991px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-value { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div class="hex-grid"></div>
+<div class="scanlines"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Navbar -->
+<nav class="navbar-nuclear">
+  <div class="page-wrap d-flex align-items-center justify-content-between">
+    <a class="brand-logo" href="/">
+      <svg class="atom-icon" viewBox="0 0 40 40" fill="none">
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00ff88" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00eeff" stroke-width="1.5" opacity="0.7" transform="rotate(60 20 20)"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#7fff00" stroke-width="1.5" opacity="0.7" transform="rotate(120 20 20)"/>
+        <circle cx="20" cy="20" r="3" fill="#00ff88"/>
+      </svg>
+      ISOSPHERE
+    </a>
+    <nav class="nav-links d-none d-lg-flex">
+      <a class="nav-link-item active" href="/dashboard">Dashboard</a>
+      <a class="nav-link-item" href="/simulation">Simulation</a>
+      <a class="nav-link-item" href="/compare">Compare</a>
+      <a class="nav-link-item" href="/ai">AI Advisor</a>
+      <a class="nav-link-item" href="/reports">Reports</a>
+      <a class="nav-link-item" href="/about">About</a>
+    </nav>
+    <div class="d-flex gap-2">
+      <a class="btn-nav-outline" href="/simulation">Simulation</a>
+      <a class="btn-nav-primary" href="/ai">AI Advisor</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- Ticker -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>◈ DASHBOARD: LIVE</span>
+      <span>◈ SECTORS TRACKED: 12</span>
+      <span>◈ SIMULATIONS RUN: 47</span>
+      <span>◈ AI QUERIES: 23</span>
+      <span>◈ KNOWLEDGE SCORE: 42%</span>
+      <span>◈ SYSTEM STATUS: NOMINAL</span>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">// Nuclear Intelligence Platform</div>
+        <div class="page-title">Executive <span class="highlight" style="color:var(--neon-cyan);text-shadow:0 0 20px rgba(0,238,255,0.4);">Dashboard</span></div>
+        <div class="page-subtitle">Investment overview, impact score, and knowledge progress across all nuclear sectors.</div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        Live Data
+      </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-grid reveal" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Investment</div>
+        <div class="kpi-value" id="kpiInvestment">$0</div>
+        <div class="kpi-sub">USD across sectors</div>
+        <div class="kpi-trend up">▲ 12.4% this quarter</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Return on Investment</div>
+        <div class="kpi-value cyan" id="kpiROI">0%</div>
+        <div class="kpi-sub">Over 5-year horizon</div>
+        <div class="kpi-trend up">▲ 3.2% vs last quarter</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Impact Score</div>
+        <div class="kpi-value gold" id="kpiImpact">0</div>
+        <div class="kpi-sub">Economic × Env × Health</div>
+        <div class="kpi-trend up">▲ 5 pts improvement</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Knowledge Progress</div>
+        <div class="kpi-value" id="kpiKnowledge">0%</div>
+        <div class="kpi-sub">Challenges completed</div>
+        <div class="kpi-trend up">3 / 7 done</div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="row g-3">
+
+      <!-- LEFT: Chart + Quick Actions -->
+      <div class="col-12 col-xl-8">
+        <div class="glass-card mb-3 reveal">
+          <div class="card-inner">
+            <div class="card-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Impact Timeline
+            </div>
+            <div class="chart-surface">
+              <canvas id="timelineChart" height="160"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="glass-card reveal">
+          <div class="card-inner">
+            <div class="card-head cyan-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Quick Actions
+            </div>
+            <div class="row g-2">
+              <div class="col-12 col-sm-6">
+                <a class="quick-action" href="/simulation">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Run New Simulation
+                </a>
+              </div>
+              <div class="col-12 col-sm-6">
+                <a class="quick-action" href="/compare">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+                  Compare Technologies
+                </a>
+              </div>
+              <div class="col-12 col-sm-6">
+                <a class="quick-action" href="/ai">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                  Ask AI Advisor
+                </a>
+              </div>
+              <div class="col-12 col-sm-6">
+                <a class="quick-action" href="/reports">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Generate Report
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Progress + Activity -->
+      <div class="col-12 col-xl-4">
+        <!-- Knowledge Progress -->
+        <div class="glass-card mb-3 reveal">
+          <div class="card-inner">
+            <div class="card-head gold-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Knowledge Progress
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between" style="margin-bottom:6px;">
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(180,255,220,0.45);">Completed Challenges</span>
+                <span style="font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:600;color:var(--neon-gold);">3 / 7</span>
+              </div>
+              <div class="progress-nuc">
+                <div class="progress-nuc-fill" id="challengeProgress" style="width:0%;"></div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between" style="margin-bottom:6px;">
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(180,255,220,0.45);">Simulations Explored</span>
+                <span style="font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:600;color:var(--neon-green);">8 / 12</span>
+              </div>
+              <div class="progress-nuc">
+                <div class="progress-nuc-fill" id="simProgress" style="width:0%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="d-flex justify-content-between" style="margin-bottom:6px;">
+                <span style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(180,255,220,0.45);">AI Queries Made</span>
+                <span style="font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:600;color:var(--neon-cyan);">23</span>
+              </div>
+              <div class="progress-nuc">
+                <div class="progress-nuc-fill" id="aiProgress" style="width:0%;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-green));"></div>
+              </div>
+            </div>
+
+            <div class="recommendation-box mt-3">
+              Run a 5-year comparison to improve ROI reasoning confidence.
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="glass-card reveal">
+          <div class="card-inner">
+            <div class="card-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Recent Activity
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Healthcare simulation</strong> completed — ROI 318%</div>
+                <div class="activity-time">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot cyan"></div>
+              <div>
+                <div class="activity-text"><strong>Compare: Healthcare vs Traditional</strong> — nuclear leads in 5/6 metrics</div>
+                <div class="activity-time">18 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot gold"></div>
+              <div>
+                <div class="activity-text"><strong>Challenge #3 passed</strong> — economic reasoning improved</div>
+                <div class="activity-time">1 hour ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot cyan"></div>
+              <div>
+                <div class="activity-text"><strong>AI query</strong> — food irradiation safety profile</div>
+                <div class="activity-time">2 hours ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Agriculture simulation</strong> — regional scale deployed</div>
+                <div class="activity-time">5 hours ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sector Overview -->
+    <div class="reveal" style="margin-top:2rem;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,255,136,0.5);margin-bottom:0.4rem;">// Sector Overview</div>
+      <div style="font-family:'Orbitron',monospace;font-size:1.15rem;font-weight:600;color:#e0fff0;margin-bottom:1.25rem;">Tracked Sectors</div>
+    </div>
+    <div class="row g-2 mb-3 reveal">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="sector-mini">
+          <div class="sector-mini-icon" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+          <div>
+            <div class="sector-mini-name">Healthcare</div>
+            <div class="sector-mini-stat" style="color:var(--neon-green);">9.4/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="sector-mini">
+          <div class="sector-mini-icon" style="background:rgba(0,238,255,0.08);border:1px solid rgba(0,238,255,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </div>
+          <div>
+            <div class="sector-mini-name">Agriculture</div>
+            <div class="sector-mini-stat" style="color:var(--neon-cyan);">8.7/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="sector-mini">
+          <div class="sector-mini-icon" style="background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          </div>
+          <div>
+            <div class="sector-mini-name">Food Safety</div>
+            <div class="sector-mini-stat" style="color:var(--neon-gold);">8.2/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="sector-mini">
+          <div class="sector-mini-icon" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M12 12v4M10 14h4"/></svg>
+          </div>
+          <div>
+            <div class="sector-mini-name">Industry</div>
+            <div class="sector-mini-stat" style="color:var(--neon-green);">8.9/10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-box reveal">
+      <div class="terminal-line"><span class="terminal-prompt">isosphere@dashboard:~$</span> <span style="color:#c8ffe0">status --all</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ KPI aggregator: syncing 4 metrics</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Impact timeline: 47 data points rendered</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Knowledge engine: 3/7 challenges complete, 42% mastery</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Sector tracker: 12 sectors monitored, 4 active</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Dashboard refresh interval: 30s</span></div>
+      <div class="terminal-line" style="margin-top:6px"><span class="terminal-prompt">isosphere@dashboard:~$</span> <span class="cursor-blink">█</span></div>
+    </div>
+
+    <footer class="footer-nuclear">
+      © ISOSPHERE · EXECUTIVE DASHBOARD v3.0.2 · NUCLEAR INTELLIGENCE PLATFORM
+    </footer>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/main.js"></script>
+<script>
+  // ── Particles ──
+  var pContainer = document.getElementById('particles');
+  for (var i = 0; i < 25; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var size = Math.random() * 2.5 + 1;
+    p.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (Math.random()*100) + '%;' +
+      'bottom:' + (Math.random()*20) + '%;' +
+      'animation-duration:' + (9+Math.random()*18) + 's;' +
+      'animation-delay:' + (Math.random()*12) + 's;' +
+      'background:' + (Math.random()>0.5?'#00ff88':'#00eeff') + ';';
+    pContainer.appendChild(p);
+  }
+
+  // ── KPI counter animations ──
+  function animateValue(el, start, end, duration, prefix, suffix, decimals) {
+    prefix = prefix || '';
+    suffix = suffix || '';
+    decimals = decimals || 0;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var ease = 1 - Math.pow(1 - progress, 3);
+      var current = start + (end - start) * ease;
+      if (decimals > 0) {
+        el.textContent = prefix + current.toFixed(decimals) + suffix;
+      } else {
+        el.textContent = prefix + Math.round(current).toLocaleString() + suffix;
+      }
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ── Progress bar animations ──
+  function animateProgress(el, targetWidth, delay) {
+    setTimeout(function() {
+      el.style.width = targetWidth;
+    }, delay || 0);
+  }
+
+  // ── Scroll Reveal + trigger animations ──
+  var kpiAnimated = false;
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+
+        // Trigger KPI animations once
+        if (entry.target.id === 'kpiGrid' && !kpiAnimated) {
+          kpiAnimated = true;
+          setTimeout(function() {
+            animateValue(document.getElementById('kpiInvestment'), 0, 125, 2000, '$', 'M', 0);
+            animateValue(document.getElementById('kpiROI'), 0, 18, 1800, '', '%', 0);
+            animateValue(document.getElementById('kpiImpact'), 0, 87, 1600, '', '/100', 0);
+            animateValue(document.getElementById('kpiKnowledge'), 0, 42, 1400, '', '%', 0);
+
+            // Activate KPI cards with stagger
+            document.querySelectorAll('.kpi-card').forEach(function(card, i) {
+              setTimeout(function() { card.classList.add('active'); }, i * 120);
+            });
+
+            // Animate progress bars
+            animateProgress(document.getElementById('challengeProgress'), '42%', 600);
+            animateProgress(document.getElementById('simProgress'), '66%', 800);
+            animateProgress(document.getElementById('aiProgress'), '77%', 1000);
+          }, 300);
+        }
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  // ── Timeline Chart (green themed) ──
+  var ctx = document.getElementById('timelineChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023', 'Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
+        datasets: [
+          {
+            label: 'Economic Impact',
+            data: [32, 38, 45, 52, 61, 68, 78, 87],
+            borderColor: 'rgba(0,255,136,0.8)',
+            backgroundColor: 'rgba(0,255,136,0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#00ff88',
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: 'Environmental Score',
+            data: [28, 33, 40, 44, 50, 58, 65, 72],
+            borderColor: 'rgba(0,238,255,0.7)',
+            backgroundColor: 'rgba(0,238,255,0.05)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#00eeff',
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: 'Health Outcomes',
+            data: [20, 25, 30, 38, 42, 50, 55, 62],
+            borderColor: 'rgba(255,204,0,0.6)',
+            backgroundColor: 'rgba(255,204,0,0.04)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#ffcc00',
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              color: 'rgba(180,255,220,0.5)',
+              font: { family: 'Share Tech Mono', size: 10 },
+              boxWidth: 12,
+              boxHeight: 2,
+              padding: 12,
+              usePointStyle: false,
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(2,10,6,0.9)',
+            borderColor: 'rgba(0,255,136,0.3)',
+            borderWidth: 1,
+            titleFont: { family: 'Share Tech Mono', size: 11 },
+            bodyFont: { family: 'Share Tech Mono', size: 11 },
+            titleColor: 'rgba(0,255,136,0.8)',
+            bodyColor: 'rgba(180,255,220,0.7)',
+            padding: 10,
+            cornerRadius: 4,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0,255,136,0.06)' },
+            ticks: { color: 'rgba(180,255,220,0.35)', font: { family: 'Share Tech Mono', size: 9 } },
+            border: { color: 'rgba(0,255,136,0.1)' },
+          },
+          y: {
+            grid: { color: 'rgba(0,255,136,0.06)' },
+            ticks: { color: 'rgba(180,255,220,0.35)', font: { family: 'Share Tech Mono', size: 9 } },
+            border: { color: 'rgba(0,255,136,0.1)' },
+            suggestedMin: 0,
+            suggestedMax: 100,
+          }
+        },
+        animation: { duration: 1200, easing: 'easeOutQuart' },
+      }
+    });
+  }
+</script>
+</body>
+</html>

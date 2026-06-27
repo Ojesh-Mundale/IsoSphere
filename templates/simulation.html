@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IsoSphere | Simulation Engine</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green: #00ff88;
+      --neon-cyan: #00eeff;
+      --neon-gold: #ffcc00;
+      --neon-red: #ff4466;
+      --plasma: #7fff00;
+      --deep: #020a06;
+      --card-bg: rgba(0,20,10,0.75);
+      --card-border: rgba(0,255,136,0.18);
+      --glow-sm: 0 0 8px rgba(0,255,136,0.4);
+      --glow-lg: 0 0 30px rgba(0,238,255,0.4), 0 0 60px rgba(0,238,255,0.15);
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--deep);
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Backgrounds ── */
+    .bg-field {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0,255,136,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 90% 10%, rgba(0,238,255,0.06) 0%, transparent 55%),
+        linear-gradient(135deg, #020a06 0%, #030f0a 40%, #010808 100%);
+    }
+    .hex-grid {
+      position: fixed; inset: 0; z-index: 0; opacity: 0.06; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='69'%3E%3Cpolygon points='30,1 58,16 58,53 30,68 2,53 2,16' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3C/svg%3E");
+      background-size: 60px 69px;
+      animation: hexdrift 40s linear infinite;
+    }
+    @keyframes hexdrift { from{background-position:0 0} to{background-position:120px 138px} }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    }
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%; opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: 0.5; }
+      90%  { opacity: 0.15; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+    }
+
+    /* ── Navbar ── */
+    .navbar-nuclear {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(2,10,6,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,255,136,0.12);
+      padding: 0.7rem 0;
+    }
+    .navbar-nuclear::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+      animation: nav-pulse 3s ease-in-out infinite;
+    }
+    @keyframes nav-pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+
+    .brand-logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800; font-size: 1.25rem;
+      color: var(--neon-green);
+      text-shadow: var(--glow-sm);
+      letter-spacing: 2px;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-logo:hover { color: var(--neon-cyan); }
+    .atom-icon { width: 28px; height: 28px; animation: spin-slow 8s linear infinite; }
+    @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .nav-links { display: flex; gap: 0.2rem; align-items: center; }
+    .nav-link-item {
+      color: rgba(200,255,224,0.6);
+      text-decoration: none; font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.8rem;
+      border-radius: 4px; border: 1px solid transparent;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      text-transform: uppercase; font-size: 0.72rem;
+    }
+    .nav-link-item:hover, .nav-link-item.active {
+      color: var(--neon-green);
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.07);
+      text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    .nav-link-item.active { color: var(--neon-green); }
+    .btn-nav-outline {
+      border: 1px solid rgba(0,238,255,0.35);
+      color: rgba(0,238,255,0.8);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-outline:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 14px rgba(0,238,255,0.2); }
+    .btn-nav-primary {
+      border: 1px solid var(--neon-green);
+      background: rgba(0,255,136,0.1);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-primary:hover { background: rgba(0,255,136,0.2); color: #fff; box-shadow: 0 0 16px rgba(0,255,136,0.3); }
+
+    /* ── Main ── */
+    main { position: relative; z-index: 2; padding-top: 80px; padding-bottom: 3rem; }
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 2rem 0 1.5rem;
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      margin-bottom: 2rem;
+      display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem;
+    }
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem; font-weight: 600;
+      color: #e0fff0;
+      text-shadow: 0 0 20px rgba(0,255,136,0.15);
+    }
+    .page-subtitle { color: rgba(180,255,220,0.5); font-size: 0.9rem; margin-top: 0.35rem; }
+
+    /* status pill */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.25);
+      padding: 0.4rem 0.9rem; border-radius: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem; color: rgba(0,255,136,0.7);
+      letter-spacing: 0.1em;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Ticker ── */
+    .ticker {
+      background: rgba(0,255,136,0.05);
+      border-top: 1px solid rgba(0,255,136,0.1);
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      padding: 0.35rem 0; overflow: hidden; margin-bottom: 2rem;
+    }
+    .ticker-inner {
+      display: flex; gap: 4rem; white-space: nowrap;
+      animation: ticker-scroll 28s linear infinite;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; color: rgba(0,255,136,0.38); letter-spacing: 0.1em;
+    }
+    @keyframes ticker-scroll { from{transform:translateX(100%)} to{transform:translateX(-200%)} }
+
+    /* ── Cards ── */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px; overflow: hidden;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+      opacity: 0.5;
+    }
+    .card-inner { padding: 1.5rem; }
+
+    .card-head {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--neon-green); margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-head svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Form controls ── */
+    .form-label-nuc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem; display: block;
+    }
+    .form-select-nuc, .form-input-nuc {
+      width: 100%;
+      background: rgba(0,15,8,0.8);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 4px;
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      padding: 0.55rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-select-nuc {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300ff88' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      padding-right: 2rem;
+    }
+    .form-select-nuc:focus, .form-input-nuc:focus {
+      border-color: rgba(0,255,136,0.5);
+      box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+    }
+    .form-select-nuc option { background: #061a10; color: #c8ffe0; }
+
+    /* Sector icon grid */
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 1.25rem;
+    }
+    .sector-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: rgba(0,15,8,0.7);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px; padding: 0.65rem 0.4rem;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .sector-btn svg { width: 20px; height: 20px; }
+    .sector-btn span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.05em;
+      color: rgba(180,255,220,0.5); text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .sector-btn:hover, .sector-btn.active {
+      border-color: var(--neon-green);
+      background: rgba(0,255,136,0.1);
+      box-shadow: 0 0 12px rgba(0,255,136,0.15);
+    }
+    .sector-btn.active span { color: var(--neon-green); }
+    .sector-btn.cyan-sector:hover, .sector-btn.cyan-sector.active { border-color: var(--neon-cyan); background: rgba(0,238,255,0.1); box-shadow: 0 0 12px rgba(0,238,255,0.15); }
+    .sector-btn.cyan-sector.active span { color: var(--neon-cyan); }
+    .sector-btn.gold-sector:hover, .sector-btn.gold-sector.active { border-color: var(--neon-gold); background: rgba(255,204,0,0.1); box-shadow: 0 0 12px rgba(255,204,0,0.15); }
+    .sector-btn.gold-sector.active span { color: var(--neon-gold); }
+
+    /* ── Run button ── */
+    .btn-nuclear {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05));
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+      padding: 0.85rem; border-radius: 4px;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 0 15px rgba(0,255,136,0.15), inset 0 0 15px rgba(0,255,136,0.04);
+      text-transform: uppercase; margin-top: 1.25rem;
+      position: relative; overflow: hidden;
+    }
+    .btn-nuclear::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,136,0.1), transparent);
+      transition: left 0.4s;
+    }
+    .btn-nuclear:hover::before { left: 100%; }
+    .btn-nuclear:hover {
+      background: rgba(0,255,136,0.2);
+      color: #fff; box-shadow: 0 0 28px rgba(0,255,136,0.35), inset 0 0 20px rgba(0,255,136,0.08);
+    }
+    .btn-nuclear:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+    .kpi-card {
+      background: rgba(0,10,5,0.6);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 0.85rem 1rem;
+      text-align: center; transition: border-color 0.3s;
+    }
+    .kpi-card.active { border-color: rgba(0,255,136,0.35); box-shadow: 0 0 12px rgba(0,255,136,0.08); }
+    .kpi-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(180,255,220,0.4);
+      margin-bottom: 0.35rem;
+    }
+    .kpi-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--neon-green);
+      text-shadow: 0 0 12px rgba(0,255,136,0.4);
+      transition: all 0.3s;
+    }
+    .kpi-value.cyan { color: var(--neon-cyan); text-shadow: 0 0 12px rgba(0,238,255,0.4); }
+    .kpi-value.gold { color: var(--neon-gold); text-shadow: 0 0 12px rgba(255,204,0,0.4); }
+    .kpi-value.empty { color: rgba(180,255,220,0.2); font-size: 1.4rem; }
+
+    /* ── Charts ── */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.25rem; }
+    .chart-surface {
+      background: rgba(0,10,5,0.7);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 1rem;
+      position: relative;
+    }
+    .chart-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(0,255,136,0.4);
+      margin-bottom: 0.6rem;
+    }
+    .chart-surface canvas { display: block; }
+
+    /* ── AI Explanation ── */
+    .ai-section {
+      background: rgba(0,10,5,0.7);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 1.1rem 1.25rem;
+    }
+    .ai-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .ai-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.72rem; font-weight: 600;
+      color: var(--neon-cyan); letter-spacing: 0.08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ai-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.1em;
+      color: rgba(0,238,255,0.4);
+      border: 1px solid rgba(0,238,255,0.2);
+      padding: 2px 8px; border-radius: 2px;
+    }
+    .ai-box {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem; line-height: 1.7;
+      color: rgba(180,255,220,0.55);
+      min-height: 80px;
+    }
+    .ai-box.active { color: rgba(200,255,224,0.8); }
+
+    /* ── Loading skeleton ── */
+    .skeleton-wrap { display: none; }
+    .skeleton-line {
+      height: 10px; border-radius: 4px;
+      background: linear-gradient(90deg, rgba(0,255,136,0.07) 25%, rgba(0,255,136,0.14) 50%, rgba(0,255,136,0.07) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+
+    /* ── Progress bar ── */
+    .progress-nuc {
+      height: 3px; background: rgba(0,255,136,0.1);
+      border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; display: none;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      border-radius: 2px; transition: width 0.1s linear;
+      box-shadow: 0 0 8px rgba(0,255,136,0.5);
+    }
+
+    /* ── Extra KPI row ── */
+    .kpi-row2 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.25rem; }
+
+    /* ── Sector info tag ── */
+    .sector-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: rgba(0,255,136,0.6);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 2px; margin-bottom: 1rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sector-grid { grid-template-columns: repeat(4, 1fr); }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-row2 { grid-template-columns: 1fr 1fr; }
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .sector-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div class="hex-grid"></div>
+<div class="scanlines"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Navbar -->
+<nav class="navbar-nuclear">
+  <div class="page-wrap d-flex align-items-center justify-content-between">
+    <a class="brand-logo" href="/">
+      <svg class="atom-icon" viewBox="0 0 40 40" fill="none">
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00ff88" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00eeff" stroke-width="1.5" opacity="0.7" transform="rotate(60 20 20)"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#7fff00" stroke-width="1.5" opacity="0.7" transform="rotate(120 20 20)"/>
+        <circle cx="20" cy="20" r="3" fill="#00ff88"/>
+      </svg>
+      ISOSPHERE
+    </a>
+    <nav class="nav-links d-none d-lg-flex">
+      <a class="nav-link-item" href="/dashboard">Dashboard</a>
+      <a class="nav-link-item active" href="/simulation">Simulation</a>
+      <a class="nav-link-item" href="/compare">Compare</a>
+      <a class="nav-link-item" href="/ai">AI Advisor</a>
+      <a class="nav-link-item" href="/reports">Reports</a>
+      <a class="nav-link-item" href="/about">About</a>
+    </nav>
+    <div class="d-flex gap-2">
+      <a class="btn-nav-outline" href="/compare">Compare</a>
+      <a class="btn-nav-primary" href="/reports">Reports</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- Ticker -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>◈ SIMULATION ENGINE: ACTIVE</span>
+      <span>◈ SECTORS LOADED: 9</span>
+      <span>◈ ISOTOPE DATABASE: ONLINE</span>
+      <span>◈ AI ADVISOR: READY</span>
+      <span>◈ NEUTRON FLUX MONITOR: STABLE</span>
+      <span>◈ ECONOMIC MODEL v3.1: CALIBRATED</span>
+      <span>◈ ROI ANALYZER: ONLINE</span>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">// Nuclear Intelligence Platform</div>
+        <div class="page-title">Simulation Engine</div>
+        <div class="page-subtitle">Select a sector and scenario — compute costs, accuracy, ROI, and societal impact.</div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        Engine Ready
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="row g-3">
+
+      <!-- LEFT: Controls -->
+      <div class="col-12 col-lg-5">
+        <div class="glass-card">
+          <div class="card-inner">
+            <div class="card-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2M6.34 6.34l1.42 1.42M16.24 16.24l1.42 1.42M6.34 17.66l1.42-1.42M16.24 7.76l1.42-1.42"/></svg>
+              Select Sector
+            </div>
+
+            <!-- Sector icon grid -->
+            <div class="sector-grid" id="sectorGrid">
+              <button class="sector-btn active" data-sector="healthcare">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/><path d="M12 8v8M8 12h8"/></svg>
+                <span>Healthcare</span>
+              </button>
+              <button class="sector-btn cyan-sector" data-sector="agriculture">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                <span>Agriculture</span>
+              </button>
+              <button class="sector-btn gold-sector" data-sector="food">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+                <span>Food Safety</span>
+              </button>
+              <button class="sector-btn" data-sector="industry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M12 12v4M10 14h4"/></svg>
+                <span>Industry</span>
+              </button>
+              <button class="sector-btn cyan-sector" data-sector="research">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+                <span>Research</span>
+              </button>
+              <button class="sector-btn gold-sector" data-sector="space">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <span>Space</span>
+              </button>
+              <button class="sector-btn" data-sector="environment">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M3 12h18M12 3a15.3 15.3 0 010 18M12 3a15.3 15.3 0 000 18"/></svg>
+                <span>Environment</span>
+              </button>
+              <button class="sector-btn cyan-sector" data-sector="security">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Security</span>
+              </button>
+              <button class="sector-btn gold-sector" data-sector="materials">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+                <span>Materials</span>
+              </button>
+              <button class="sector-btn" data-sector="water">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                <span>Water</span>
+              </button>
+              <button class="sector-btn cyan-sector" data-sector="pharma">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M10.5 20H4a2 2 0 01-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 011.66.9l.82 1.2a2 2 0 001.66.9H20a2 2 0 012 2v2"/><circle cx="17" cy="17" r="5"/><path d="M17 14v6M14 17h6"/></svg>
+                <span>Pharma</span>
+              </button>
+              <button class="sector-btn gold-sector" data-sector="energy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Energy</span>
+              </button>
+            </div>
+
+            <div class="sector-tag" id="activeSectorTag">
+              <span>▸</span> <span id="sectorTagText">Healthcare · Medical Imaging</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label-nuc">Scenario</label>
+              <select class="form-select-nuc" id="scenarioSelect"></select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label-nuc">Technology</label>
+              <select class="form-select-nuc" id="techSelect"></select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label-nuc">Scale</label>
+              <select class="form-select-nuc" id="scaleSelect">
+                <option value="pilot">Pilot — Single facility</option>
+                <option value="regional" selected>Regional — 5–10 facilities</option>
+                <option value="national">National — Full deployment</option>
+              </select>
+            </div>
+
+            <button class="btn-nuclear" id="runBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Simulation
+            </button>
+
+            <div class="progress-nuc mt-3" id="progressBar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="skeleton-wrap mt-2" id="loadingBlock">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line" style="width:75%"></div>
+              <div class="skeleton-line" style="width:90%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div class="col-12 col-lg-7">
+        <div class="glass-card">
+          <div class="card-inner">
+            <div class="card-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Simulation Results
+            </div>
+
+            <!-- KPI row 1 -->
+            <div class="kpi-grid" id="kpiGrid">
+              <div class="kpi-card" id="kpiCardA">
+                <div class="kpi-label">Investment Cost</div>
+                <div class="kpi-value empty" id="kpiInvestment">—</div>
+              </div>
+              <div class="kpi-card" id="kpiCardB">
+                <div class="kpi-label">Operating / yr</div>
+                <div class="kpi-value cyan empty" id="kpiOperating">—</div>
+              </div>
+              <div class="kpi-card" id="kpiCardC">
+                <div class="kpi-label">Accuracy</div>
+                <div class="kpi-value gold empty" id="kpiAccuracy">—</div>
+              </div>
+            </div>
+
+            <!-- KPI row 2 -->
+            <div class="kpi-row2">
+              <div class="kpi-card" id="kpiCardD">
+                <div class="kpi-label">ROI (5yr)</div>
+                <div class="kpi-value empty" id="kpiROI">—</div>
+              </div>
+              <div class="kpi-card" id="kpiCardE">
+                <div class="kpi-label">Payback</div>
+                <div class="kpi-value cyan empty" id="kpiPayback">—</div>
+              </div>
+              <div class="kpi-card" id="kpiCardF">
+                <div class="kpi-label">Throughput</div>
+                <div class="kpi-value gold empty" id="kpiThroughput">—</div>
+              </div>
+              <div class="kpi-card" id="kpiCardG">
+                <div class="kpi-label">Impact Score</div>
+                <div class="kpi-value empty" id="kpiImpact">—</div>
+              </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-grid">
+              <div class="chart-surface">
+                <div class="chart-label">Economic Profile</div>
+                <canvas id="resultChart" height="140"></canvas>
+              </div>
+              <div class="chart-surface">
+                <div class="chart-label">Impact Distribution</div>
+                <canvas id="impactChart" height="140"></canvas>
+              </div>
+            </div>
+
+            <!-- AI Explanation -->
+            <div class="ai-section">
+              <div class="ai-header">
+                <div class="ai-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                  AI Explanation
+                </div>
+                <div class="ai-badge">via local Ollama</div>
+              </div>
+              <div class="ai-box" id="aiBox">Run a simulation to generate an AI-powered economic and technical explanation.</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/simulation.js"></script>
+<!-- Inline simulation script removed. The Simulation page is now driven by static/js/simulation.js + backend APIs. -->
+</body>
+</html>

@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IsoSphere | About</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green: #00ff88;
+      --neon-cyan: #00eeff;
+      --neon-gold: #ffcc00;
+      --neon-red: #ff4466;
+      --plasma: #7fff00;
+      --deep: #020a06;
+      --card-bg: rgba(0,20,10,0.75);
+      --card-border: rgba(0,255,136,0.18);
+      --glow-sm: 0 0 8px rgba(0,255,136,0.4);
+      --glow-lg: 0 0 30px rgba(0,238,255,0.4), 0 0 60px rgba(0,238,255,0.15);
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--deep);
+      color: #c8ffe0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .bg-field {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0,255,136,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 90% 10%, rgba(0,238,255,0.06) 0%, transparent 55%),
+        linear-gradient(135deg, #020a06 0%, #030f0a 40%, #010808 100%);
+    }
+    .hex-grid {
+      position: fixed; inset: 0; z-index: 0; opacity: 0.06; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='69'%3E%3Cpolygon points='30,1 58,16 58,53 30,68 2,53 2,16' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3C/svg%3E");
+      background-size: 60px 69px;
+      animation: hexdrift 40s linear infinite;
+    }
+    @keyframes hexdrift { from{background-position:0 0} to{background-position:120px 138px} }
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    }
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%; opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: 0.5; }
+      90%  { opacity: 0.15; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+    }
+
+    .navbar-nuclear {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(2,10,6,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,255,136,0.12);
+      padding: 0.7rem 0;
+    }
+    .navbar-nuclear::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+      animation: nav-pulse 3s ease-in-out infinite;
+    }
+    @keyframes nav-pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+
+    .brand-logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800; font-size: 1.25rem;
+      color: var(--neon-green);
+      text-shadow: var(--glow-sm);
+      letter-spacing: 2px;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-logo:hover { color: var(--neon-cyan); }
+    .atom-icon { width: 28px; height: 28px; animation: spin-slow 8s linear infinite; }
+    @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .nav-links { display: flex; gap: 0.2rem; align-items: center; }
+    .nav-link-item {
+      color: rgba(200,255,224,0.6);
+      text-decoration: none; font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.8rem;
+      border-radius: 4px; border: 1px solid transparent;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      text-transform: uppercase; font-size: 0.72rem;
+    }
+    .nav-link-item:hover, .nav-link-item.active {
+      color: var(--neon-green);
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.07);
+      text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    .nav-link-item.active { color: var(--neon-green); }
+    .btn-nav-outline {
+      border: 1px solid rgba(0,238,255,0.35);
+      color: rgba(0,238,255,0.8);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-outline:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 14px rgba(0,238,255,0.2); }
+    .btn-nav-primary {
+      border: 1px solid var(--neon-green);
+      background: rgba(0,255,136,0.1);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; padding: 0.35rem 1rem;
+      border-radius: 3px; text-decoration: none;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .btn-nav-primary:hover { background: rgba(0,255,136,0.2); color: #fff; box-shadow: 0 0 16px rgba(0,255,136,0.3); }
+
+    main { position: relative; z-index: 2; padding-top: 80px; padding-bottom: 3rem; }
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    .page-header {
+      padding: 2rem 0 1.5rem;
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      margin-bottom: 2rem;
+      display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(0,255,136,0.5);
+      margin-bottom: 0.4rem;
+    }
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem; font-weight: 600;
+      color: #e0fff0;
+      text-shadow: 0 0 20px rgba(0,255,136,0.15);
+    }
+    .page-subtitle { color: rgba(180,255,220,0.5); font-size: 0.9rem; margin-top: 0.35rem; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,238,255,0.08);
+      border: 1px solid rgba(0,238,255,0.25);
+      padding: 0.4rem 0.9rem; border-radius: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem; color: rgba(0,238,255,0.7);
+      letter-spacing: 0.1em;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-cyan); animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .ticker {
+      background: rgba(0,255,136,0.05);
+      border-top: 1px solid rgba(0,255,136,0.1);
+      border-bottom: 1px solid rgba(0,255,136,0.1);
+      padding: 0.35rem 0; overflow: hidden; margin-bottom: 2rem;
+    }
+    .ticker-inner {
+      display: flex; gap: 4rem; white-space: nowrap;
+      animation: ticker-scroll 28s linear infinite;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; color: rgba(0,255,136,0.38); letter-spacing: 0.1em;
+    }
+    @keyframes ticker-scroll { from{transform:translateX(100%)} to{transform:translateX(-200%)} }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px; overflow: hidden;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+    .glass-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+      opacity: 0.5;
+    }
+    .card-inner { padding: 1.5rem; }
+
+    .card-head {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--neon-green); margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-head svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .card-head.cyan-head { color: var(--neon-cyan); }
+    .card-head.gold-head { color: var(--neon-gold); }
+
+    /* ── Hero ── */
+    .hero-block {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 8px;
+      padding: 2.5rem;
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(12px);
+      margin-bottom: 2rem;
+    }
+    .hero-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), var(--neon-green), transparent);
+      opacity: 0.6;
+    }
+    .hero-block::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 40% at 30% 20%, rgba(0,255,136,0.04) 0%, transparent 60%),
+                  radial-gradient(ellipse 50% 50% at 80% 80%, rgba(0,238,255,0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.25);
+      color: var(--neon-green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.15em;
+      padding: 0.3rem 0.85rem; border-radius: 2px;
+      text-transform: uppercase; margin-bottom: 1.25rem;
+      position: relative; z-index: 1;
+    }
+    .hero-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--neon-green); animation: blink 1.2s ease-in-out infinite; }
+    .hero-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      font-weight: 600; line-height: 1.25;
+      color: #e0fff0;
+      text-shadow: 0 0 30px rgba(0,238,255,0.15);
+      margin-bottom: 1rem;
+      position: relative; z-index: 1;
+    }
+    .hero-title .hl { color: var(--neon-cyan); text-shadow: 0 0 20px rgba(0,238,255,0.4); }
+    .hero-title .hlg { color: var(--neon-gold); text-shadow: 0 0 20px rgba(255,204,0,0.3); }
+    .hero-text {
+      color: rgba(180,255,220,0.55);
+      font-size: 0.95rem; line-height: 1.75;
+      max-width: 780px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── About cards ── */
+    .about-card {
+      background: rgba(0,10,5,0.6);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 6px; padding: 1.5rem;
+      height: 100%; transition: border-color 0.3s, box-shadow 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .about-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      opacity: 0.5; transition: opacity 0.3s;
+    }
+    .about-card:hover { border-color: rgba(0,255,136,0.3); box-shadow: 0 0 20px rgba(0,255,136,0.08); }
+    .about-card:hover::before { opacity: 1; }
+    .about-card.green-accent::before { background: linear-gradient(90deg, transparent, var(--neon-green), transparent); }
+    .about-card.cyan-accent::before { background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent); }
+    .about-card.gold-accent::before { background: linear-gradient(90deg, transparent, var(--neon-gold), transparent); }
+
+    .about-icon {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .about-icon svg { width: 22px; height: 22px; }
+    .about-icon.green { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); }
+    .about-icon.green svg { stroke: var(--neon-green); }
+    .about-icon.cyan { background: rgba(0,238,255,0.08); border: 1px solid rgba(0,238,255,0.2); }
+    .about-icon.cyan svg { stroke: var(--neon-cyan); }
+    .about-icon.gold { background: rgba(255,204,0,0.08); border: 1px solid rgba(255,204,0,0.2); }
+    .about-icon.gold svg { stroke: var(--neon-gold); }
+
+    .about-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.06em; margin-bottom: 0.5rem;
+    }
+    .about-label.green { color: var(--neon-green); }
+    .about-label.cyan { color: var(--neon-cyan); }
+    .about-label.gold { color: var(--neon-gold); }
+    .about-text {
+      color: rgba(180,255,220,0.5);
+      font-size: 0.86rem; line-height: 1.65;
+    }
+
+    /* ── Feature grid ── */
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .feature-item {
+      background: rgba(0,10,5,0.5);
+      border: 1px solid rgba(0,255,136,0.1);
+      border-radius: 6px; padding: 1rem;
+      text-align: center; transition: all 0.2s;
+    }
+    .feature-item:hover {
+      border-color: rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.04);
+      transform: translateY(-2px);
+    }
+    .feature-item svg { width: 24px; height: 24px; margin-bottom: 0.5rem; }
+    .feature-item-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(200,255,224,0.65);
+    }
+
+    /* ── Sector chips ── */
+    .sector-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sector-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(0,10,5,0.6);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 3px; padding: 0.3rem 0.65rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem; color: rgba(180,255,220,0.5);
+      letter-spacing: 0.04em; transition: all 0.2s;
+    }
+    .sector-chip:hover { border-color: rgba(0,255,136,0.3); color: rgba(200,255,224,0.8); }
+    .sector-chip .sc-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Example use cases ── */
+    .usecase-item {
+      display: flex; gap: 1rem; padding: 1rem 0;
+      border-bottom: 1px solid rgba(0,255,136,0.06);
+    }
+    .usecase-item:last-child { border-bottom: none; }
+    .usecase-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4rem; font-weight: 800;
+      line-height: 1; flex-shrink: 0;
+      width: 36px; text-align: center;
+    }
+    .usecase-title {
+      font-size: 0.9rem; color: rgba(200,255,224,0.85);
+      font-weight: 500; margin-bottom: 0.2rem;
+    }
+    .usecase-desc {
+      color: rgba(180,255,220,0.45);
+      font-size: 0.82rem; line-height: 1.55;
+    }
+
+    /* ── CTA ── */
+    .cta-block {
+      background: linear-gradient(135deg, rgba(0,255,136,0.06), rgba(0,238,255,0.04));
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 8px; padding: 2rem 2.5rem;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), var(--neon-cyan), transparent);
+      opacity: 0.7;
+    }
+    .cta-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem; font-weight: 600;
+      color: #e0fff0; margin-bottom: 0.5rem;
+    }
+    .cta-text { color: rgba(180,255,220,0.5); font-size: 0.88rem; margin-bottom: 1.25rem; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05));
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+      padding: 0.85rem 2rem; border-radius: 4px;
+      text-decoration: none; transition: all 0.25s;
+      box-shadow: 0 0 15px rgba(0,255,136,0.15), inset 0 0 15px rgba(0,255,136,0.04);
+      text-transform: uppercase; position: relative; overflow: hidden;
+    }
+    .cta-btn::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,136,0.1), transparent);
+      transition: left 0.4s;
+    }
+    .cta-btn:hover::before { left: 100%; }
+    .cta-btn:hover {
+      background: rgba(0,255,136,0.2); color: #fff;
+      box-shadow: 0 0 28px rgba(0,255,136,0.35), inset 0 0 20px rgba(0,255,136,0.08);
+    }
+
+    /* ── Terminal ── */
+    .terminal-box {
+      background: rgba(0,10,5,0.8);
+      border: 1px solid rgba(0,255,136,0.15);
+      border-radius: 6px; padding: 1.1rem 1.25rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem; color: rgba(0,255,136,0.6);
+      position: relative; overflow: hidden;
+    }
+    .terminal-box::before {
+      content: '● ● ●';
+      display: block; color: rgba(0,255,136,0.3);
+      font-size: 0.6rem; letter-spacing: 4px; margin-bottom: 0.6rem;
+    }
+    .terminal-line { margin: 2px 0; }
+    .terminal-prompt { color: rgba(0,238,255,0.6); }
+    .terminal-output { color: rgba(0,255,136,0.45); }
+    .cursor-blink { animation: blink 1s step-end infinite; color: var(--neon-green); }
+
+    .footer-nuclear {
+      text-align: center; padding: 2rem 1rem;
+      border-top: 1px solid rgba(0,255,136,0.1);
+      margin-top: 2rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem; color: rgba(0,255,136,0.3);
+      letter-spacing: 0.1em;
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal:nth-child(2) { transition-delay: 0.1s; }
+    .reveal:nth-child(3) { transition-delay: 0.2s; }
+
+    @media (max-width: 767px) {
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-block { padding: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+<div class="hex-grid"></div>
+<div class="scanlines"></div>
+<div class="particles" id="particles"></div>
+
+<nav class="navbar-nuclear">
+  <div class="page-wrap d-flex align-items-center justify-content-between">
+    <a class="brand-logo" href="/">
+      <svg class="atom-icon" viewBox="0 0 40 40" fill="none">
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00ff88" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#00eeff" stroke-width="1.5" opacity="0.7" transform="rotate(60 20 20)"/>
+        <ellipse cx="20" cy="20" rx="18" ry="7" stroke="#7fff00" stroke-width="1.5" opacity="0.7" transform="rotate(120 20 20)"/>
+        <circle cx="20" cy="20" r="3" fill="#00ff88"/>
+      </svg>
+      ISOSPHERE
+    </a>
+    <nav class="nav-links d-none d-lg-flex">
+      <a class="nav-link-item" href="/dashboard">Dashboard</a>
+      <a class="nav-link-item" href="/simulation">Simulation</a>
+      <a class="nav-link-item" href="/compare">Compare</a>
+      <a class="nav-link-item" href="/ai">AI Advisor</a>
+      <a class="nav-link-item" href="/reports">Reports</a>
+      <a class="nav-link-item active" href="/about">About</a>
+    </nav>
+    <div class="d-flex gap-2">
+      <a class="btn-nav-outline" href="/simulation">Simulation</a>
+      <a class="btn-nav-primary" href="/ai">AI Advisor</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>◈ ISOSPHERE: NUCLEAR INTELLIGENCE PLATFORM</span>
+      <span>◈ SECTORS: 12</span>
+      <span>◈ NOT JUST ENERGY — MEDICINE · FOOD · INDUSTRY · SPACE</span>
+      <span>◈ INTERACTIVE SIMULATIONS · AI-POWERED INSIGHTS</span>
+      <span>◈ DATA: IAEA · ROSATOM · PEER-REVIEWED RESEARCH</span>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">// Nuclear Intelligence Platform</div>
+        <div class="page-title">What is <span style="color:var(--neon-cyan);text-shadow:0 0 20px rgba(0,238,255,0.4);">IsoSphere</span>?</div>
+        <div class="page-subtitle">An interactive platform that makes nuclear and isotope technologies understandable, comparable, and decision-ready.</div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        v1.0 Stable
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero-block reveal">
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        The Core Idea
+      </div>
+      <div class="hero-title">
+        When People Hear "Nuclear," They Think <span class="hl">Power Plants</span>.<br>
+        IsoSphere Shows You <span class="hlg">Everything Else</span>.
+      </div>
+      <div class="hero-text">
+        Nuclear science is everywhere — in the hospital where you get a PET scan, in the food supply chain that keeps imports safe, in the factory that checks welds on an oil pipeline, in the satellite exploring deep space. But most people — including engineers, policymakers, and students — have no single place to explore what these technologies actually do, how much they cost, or how they compare to conventional alternatives. IsoSphere is that place. It is an interactive intelligence platform that lets you simulate nuclear technology deployments across 12 sectors, compare them against traditional methods with real data, and ask an AI to explain the results in plain language.
+      </div>
+    </div>
+
+    <!-- Three pillars -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-lg-4 reveal">
+        <div class="about-card green-accent">
+          <div class="about-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="about-label green">Understand</div>
+          <div class="about-text">Nuclear technology is surrounded by misconception and information asymmetry. IsoSphere cuts through the noise by presenting factual, data-driven profiles for each sector — what the technology does, where it is used in the real world, and what its measurable outcomes are. No hype, no fear — just numbers and context.</div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4 reveal">
+        <div class="about-card cyan-accent">
+          <div class="about-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+          </div>
+          <div class="about-label cyan">Compare</div>
+          <div class="about-text">Is nuclear actually better than the alternative? That depends on the sector, the scale, and what you are optimizing for. IsoSphere's Comparison Engine puts nuclear and traditional technologies side-by-side across six metrics — cost, efficiency, accuracy, ROI, safety, and environmental impact — so you can see exactly where each approach wins and loses.</div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4 reveal">
+        <div class="about-card gold-accent">
+          <div class="about-icon gold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div class="about-label gold">Decide</div>
+          <div class="about-text">Data alone is not enough — you need interpretation. IsoSphere's AI Advisor takes your simulation or comparison results and explains them in natural language: why one technology outperformed another, what the trade-offs mean in practice, and what a decision-maker should consider before committing resources.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What can you do -->
+    <div class="reveal" style="margin-bottom:0.5rem;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,255,136,0.5);margin-bottom:0.4rem;">// Capabilities</div>
+      <div style="font-family:'Orbitron',monospace;font-size:1.15rem;font-weight:600;color:#e0fff0;margin-bottom:1.25rem;">What You Can Do With IsoSphere</div>
+    </div>
+    <div class="feature-grid mb-3 reveal">
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="feature-item-name">Run Simulations</div>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><path d="M12 20V10M6 20V4M18 20v-6"/></svg>
+        <div class="feature-item-name">Compare Technologies</div>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <div class="feature-item-name">Ask AI Questions</div>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="feature-item-name">Export PDF Reports</div>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00eeff" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        <div class="feature-item-name">Track Your Progress</div>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <div class="feature-item-name">Complete Challenges</div>
+      </div>
+    </div>
+
+    <!-- Sectors + Use Cases side by side -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-lg-5 reveal">
+        <div class="glass-card">
+          <div class="card-inner">
+            <div class="card-head gold-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg>
+              12 Sectors Covered
+            </div>
+            <div class="sector-chips">
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-green);"></span>Healthcare</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-cyan);"></span>Agriculture</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-gold);"></span>Food Safety</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-green);"></span>Industry</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-cyan);"></span>Research</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-gold);"></span>Space</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-green);"></span>Environment</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-cyan);"></span>Security</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-gold);"></span>Materials</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-green);"></span>Water</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-cyan);"></span>Pharma</div>
+              <div class="sector-chip"><span class="sc-dot" style="background:var(--neon-gold);"></span>Energy</div>
+            </div>
+            <div style="margin-top:1.25rem;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:rgba(180,255,220,0.35);line-height:1.6;">
+              Each sector includes multiple scenarios, technologies, and deployment scales. Data is sourced from IAEA technical documents, ROSATOM publications, and peer-reviewed research.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-7 reveal">
+        <div class="glass-card">
+          <div class="card-inner">
+            <div class="card-head cyan-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Real-World Questions IsoSphere Answers
+            </div>
+            <div class="usecase-item">
+              <div class="usecase-num" style="color:var(--neon-green);">01</div>
+              <div>
+                <div class="usecase-title">"Should our hospital invest in a PET/CT scanner or another MRI unit?"</div>
+                <div class="usecase-desc">Run a healthcare simulation to see upfront costs, operating expenses, diagnostic accuracy, and 5-year ROI for each option side-by-side.</div>
+              </div>
+            </div>
+            <div class="usecase-item">
+              <div class="usecase-num" style="color:var(--neon-cyan);">02</div>
+              <div>
+                <div class="usecase-title">"Is food irradiation actually safer than chemical preservatives?"</div>
+                <div class="usecase-desc">Compare food preservation technologies across pathogen elimination, nutritional impact, regulatory acceptance, and cost per ton treated.</div>
+              </div>
+            </div>
+            <div class="usecase-item">
+              <div class="usecase-num" style="color:var(--neon-gold);">03</div>
+              <div>
+                <div class="usecase-title">"Why use gamma radiography instead of ultrasound for pipeline inspection?"</div>
+                <div class="usecase-desc">See how industrial NDT methods differ in defect detection accuracy, inspection speed, cost per joint, and safety profile.</div>
+              </div>
+            </div>
+            <div class="usecase-item">
+              <div class="usecase-num" style="color:var(--neon-green);">04</div>
+              <div>
+                <div class="usecase-title">"What is the real economic impact of sterile insect technique in agriculture?"</div>
+                <div class="usecase-desc">Simulate a regional SIT deployment and compare it against chemical pesticide programs for the same crop and area.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why it matters -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-lg-6 reveal">
+        <div class="about-card cyan-accent">
+          <div class="about-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="about-label cyan">The Awareness Gap</div>
+          <div class="about-text">Most people — including engineers, students, and policymakers — associate nuclear science exclusively with power generation. In reality, isotope technologies are used in over 100 countries for medical diagnosis, food safety, water management, industrial quality control, and environmental protection. This gap between what nuclear science actually does and what people think it does leads to missed opportunities, unfounded resistance, and poor technology choices. IsoSphere exists to close that gap with data, not rhetoric.</div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6 reveal">
+        <div class="about-card green-accent">
+          <div class="about-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="about-label green">Privacy-First Design</div>
+          <div class="about-text">IsoSphere's AI Advisor runs entirely on your local machine using Ollama — no queries are sent to external servers, no data leaves your device, and no usage is tracked. Your simulation results, comparisons, and questions stay private. The platform is designed for environments where confidentiality matters: government agencies, research institutions, and corporate strategy teams evaluating nuclear technology options.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-block reveal">
+      <div class="cta-title">See It In Action</div>
+      <div class="cta-text">Pick a sector, run a simulation, and watch the numbers tell the story.</div>
+      <a class="cta-btn" href="/simulation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Launch Simulation
+      </a>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-box reveal">
+      <div class="terminal-line"><span class="terminal-prompt">isosphere@about:~$</span> <span style="color:#c8ffe0">isosphere --purpose</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ IsoSphere is an interactive nuclear intelligence platform.</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ It simulates, compares, and explains isotope technologies across 12 sectors.</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ All AI inference runs locally. No data leaves your machine.</span></div>
+      <div class="terminal-line"><span class="terminal-output">▸ Built for HackAtom International at Ural Federal University.</span></div>
+      <div class="terminal-line" style="margin-top:6px"><span class="terminal-prompt">isosphere@about:~$</span> <span class="cursor-blink">█</span></div>
+    </div>
+
+    <footer class="footer-nuclear">
+      © ISOSPHERE · HACKATOM 2024 · URAL FEDERAL UNIVERSITY · NUCLEAR INTELLIGENCE PLATFORM
+    </footer>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  var pContainer = document.getElementById('particles');
+  for (var i = 0; i < 25; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var size = Math.random() * 2.5 + 1;
+    p.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (Math.random()*100) + '%;' +
+      'bottom:' + (Math.random()*20) + '%;' +
+      'animation-duration:' + (9+Math.random()*18) + 's;' +
+      'animation-delay:' + (Math.random()*12) + 's;' +
+      'background:' + (Math.random()>0.5?'#00ff88':'#00eeff') + ';';
+    pContainer.appendChild(p);
+  }
+
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+</script>
+</body>
+</html>
